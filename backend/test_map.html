@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Earth Engine Tile Test</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { margin: 0; padding: 20px; font-family: Arial, sans-serif; }
+        #map { height: 500px; border: 1px solid #ccc; margin: 20px 0; }
+        .info { background: #f9f9f9; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .error { background: #ffe6e6; border-left: 4px solid #ff0000; }
+        .success { background: #e6ffe6; border-left: 4px solid #00aa00; }
+        button { background: #007cba; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; margin: 5px; }
+        button:hover { background: #005a8a; }
+    </style>
+</head>
+<body>
+    <h1>🛰️ Earth Engine Tile Test</h1>
+    
+    <div class="info">
+        <h3>Test Status</h3>
+        <div id="status">Checking Earth Engine connection...</div>
+    </div>
+    
+    <div>
+        <button onclick="testSimpleMap()">Test Simple Map</button>
+        <button onclick="testTileEndpoint()">Test Tile Endpoint</button>
+        <button onclick="loadEarthEngineLayer()">Load EE Layer</button>
+        <button onclick="clearMap()">Clear Map</button>
+    </div>
+    
+    <div id="map"></div>
+    
+    <div class="info">
+        <h3>Instructions</h3>
+        <ul>
+            <li><strong>Test Simple Map:</strong> Load a basic Earth Engine elevation layer</li>
+            <li><strong>Test Tile Endpoint:</strong> Verify backend tile serving is working</li>
+            <li><strong>Load EE Layer:</strong> Load the actual Earth Engine layer from your backend</li>
+        </ul>
+    </div>
+    
+    <div id="log" class="info">
+        <h3>Log</h3>
+        <div id="logContent">Ready...</div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Initialize map
+        var map = L.map('map').setView([11.0168, 76.9558], 10);
+        
+        // Add base layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+        
+        var currentLayer = null;
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logContent = document.getElementById('logContent');
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : '';
+            logContent.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            logContent.scrollTop = logContent.scrollHeight;
+        }
+        
+        function updateStatus(message, type = 'info') {
+            const status = document.getElementById('status');
+            status.innerHTML = message;
+            status.className = type === 'error' ? 'error' : type === 'success' ? 'success' : '';
+        }
+        
+        async function testSimpleMap() {
+            log('Testing simple map endpoint...');
+            try {
+                const response = await fetch('http://localhost:8001/simple-map');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    log('✅ Simple map endpoint working', 'success');
+                    log(`Map ID: ${data.map_id}`);
+                    log(`Tile URL: ${data.tile_url}`);
+                    updateStatus('Earth Engine connection: SUCCESS', 'success');
+                    
+                    // Try to add the layer
+                    if (currentLayer) {
+                        map.removeLayer(currentLayer);
+                    }
+                    
+                    currentLayer = L.tileLayer(data.tile_url, {
+                        attribution: 'Google Earth Engine',
+                        opacity: 0.7
+                    });
+                    
+                    currentLayer.addTo(map);
+                    log('✅ Earth Engine layer added to map', 'success');
+                    
+                } else {
+                    log(`❌ Simple map failed: ${data.message}`, 'error');
+                    updateStatus('Earth Engine connection: FAILED', 'error');
+                }
+            } catch (error) {
+                log(`❌ Simple map request failed: ${error.message}`, 'error');
+                updateStatus('Backend connection: FAILED', 'error');
+            }
+        }
+        
+        async function testTileEndpoint() {
+            log('Testing tile endpoint...');
+            try {
+                const response = await fetch('http://localhost:8001/test-tile/10/500/400');
+                const data = await response.json();
+                log(`✅ Tile endpoint response: z=${data.z}, x=${data.x}, y=${data.y}`, 'success');
+            } catch (error) {
+                log(`❌ Tile endpoint failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function loadEarthEngineLayer() {
+            log('Loading Earth Engine layer from main backend...');
+            try {
+                const response = await fetch('http://localhost:8000/api/earth-engine/live-layers');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    log('✅ Live layers endpoint working', 'success');
+                    
+                    // Get elevation layer
+                    const elevationLayer = data.layers.elevation;
+                    if (elevationLayer && elevationLayer.tile_url) {
+                        if (currentLayer) {
+                            map.removeLayer(currentLayer);
+                        }
+                        
+                        log(`Loading tile URL: ${elevationLayer.tile_url}`);
+                        
+                        currentLayer = L.tileLayer(elevationLayer.tile_url, {
+                            attribution: 'Google Earth Engine',
+                            opacity: 0.7,
+                            errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
+                        });
+                        
+                        currentLayer.on('tileerror', (e) => {
+                            log(`❌ Tile error: ${e.error}`, 'error');
+                        });
+                        
+                        currentLayer.addTo(map);
+                        log('✅ Earth Engine elevation layer loaded', 'success');
+                    }
+                } else {
+                    log(`❌ Live layers failed: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Live layers request failed: ${error.message}`, 'error');
+            }
+        }
+        
+        function clearMap() {
+            if (currentLayer) {
+                map.removeLayer(currentLayer);
+                currentLayer = null;
+                log('🧹 Map cleared');
+            }
+        }
+        
+        // Auto-test on load
+        setTimeout(() => {
+            testSimpleMap();
+        }, 1000);
+    </script>
+</body>
+</html>

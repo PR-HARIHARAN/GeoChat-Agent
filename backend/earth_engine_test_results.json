@@ -1,0 +1,88 @@
+{
+  "timestamp": "2025-07-05T23:03:22.384353",
+  "earth_engine_status": "connected",
+  "map_data": {
+    "center": {
+      "lat": 11.0168,
+      "lng": 76.9558
+    },
+    "zoom": 10,
+    "elevation_url": "https://earthengine.googleapis.com/v1/projects/earthengine-legacy/maps/b2d9355d26387ce2998f28503cfeb1c0-9b061be04ba0d187416a2551a5a2dbee/tiles/{z}/{x}/{y}",
+    "flood_risk_url": "https://earthengine.googleapis.com/v1/projects/earthengine-legacy/maps/0714b84df2fd78d94aceb6912c85b41c-c249468b45ad5a216475a174f0d87225/tiles/{z}/{x}/{y}",
+    "precipitation_url": "https://earthengine.googleapis.com/v1/projects/earthengine-legacy/maps/9ad3a21ab474939805e512261407eef4-c299d12cb4db21c339be70ce42493dff/tiles/{z}/{x}/{y}",
+    "sample_data": {
+      "elevation": 432,
+      "flood_risk": 1,
+      "slope": 0.9448183178901672
+    }
+  },
+  "backend_analysis": {
+    "coordinates": {
+      "lat": 11.0168,
+      "lng": 76.9558
+    },
+    "timestamp": "2025-07-05T23:03:13.988895",
+    "status": "completed",
+    "flood_analysis": {
+      "flood_percentage": 3.0,
+      "average_elevation": 425.54,
+      "risk_level": "Low",
+      "coordinates": {
+        "lat": 11.0168,
+        "lng": 76.9558
+      },
+      "analysis_radius": 5000
+    },
+    "building_analysis": {
+      "error": "Error in building analysis: Expected a homogeneous image collection, but an image with incompatible bands was encountered:\n  First image type: 23 bands ([B1, B2, B3, B4, B5, B6, B7, B8, B8A, B9, B11, B12, AOT, WVP, SCL, TCI_R, TCI_G, TCI_B, MSK_CLDPRB, MSK_SNWPRB, QA10, QA20, QA60]).\nCurrent image type: 23 bands ([B1, B2, B3, B4, B5, B6, B7, B8, B8A, B9, B11, B12, AOT, WVP, SCL, TCI_R, TCI_G, TCI_B, MSK_CLDPRB, MSK_SNWPRB, MSK_CLASSI_OPAQUE, MSK_CLASSI_CIRRUS, MSK_CLASSI_SNOW_ICE]).\n          Image ID: 20240212T050939_20240212T051719_T43PGN\nSome bands might require explicit casts."
+    },
+    "social_vulnerability": {
+      "score": 0.29,
+      "category": "Moderate",
+      "factors": {
+        "flood_risk": 0.2,
+        "building_density": 0,
+        "elevation_risk": 0.1,
+        "infrastructure_access": 1.0
+      },
+      "description": "Social vulnerability is moderate based on flood risk, building density, and elevation factors."
+    },
+    "ai_analysis": {
+      "intent": "flood_analysis",
+      "ai_response": "Analyzing flood vulnerability using satellite data and elevation models. This includes water detection from SAR imagery and topographic analysis.",
+      "confidence": 0.7,
+      "suggested_actions": [
+        "View flood risk zones on map",
+        "Check historical flood data",
+        "Analyze drainage patterns",
+        "Assess elevation vulnerability"
+      ]
+    },
+    "report": "\n**Flood Risk Assessment:**\n- Current flood coverage: 3.0%\n- Average elevation: 425.5m\n- Risk level: Low\n\n\n**Building Damage Assessment:**\n- Estimated buildings: 0\n- Potentially damaged: 0\n- Damage rate: 0.0%\n\n\n**Analysis Location:**\n- Coordinates: 11.0168, 76.9558\n- Analysis performed: 2025-07-05T23:03:13.988895\n"
+  },
+  "sample_layers": {
+    "population": {
+      "name": "Population Density",
+      "url": "https://earthengine.googleapis.com/v1/projects/earthengine-legacy/maps/e377ee499ef7acdddd53b656f3c87e05-8b4cf269a0259bb102d5421837120713/tiles/{z}/{x}/{y}",
+      "description": "Population density per 100m grid"
+    },
+    "infrastructure": {
+      "name": "Night Lights (Infrastructure)",
+      "url": "https://earthengine.googleapis.com/v1/projects/earthengine-legacy/maps/7494dc03bf5963c2d393c36a7fc2d9b6-0af3e88d52da7b244d8615b1e613dc9c/tiles/{z}/{x}/{y}",
+      "description": "Night-time lights indicating infrastructure"
+    },
+    "urban": {
+      "name": "Urban Areas",
+      "url": "https://earthengine.googleapis.com/v1/projects/earthengine-legacy/maps/aef715da12da33d3f4923f01e7f0bd82-732a958b7ae06f528841f26e85b990cc/tiles/{z}/{x}/{y}",
+      "description": "Urban and built-up areas"
+    }
+  },
+  "test_location": {
+    "name": "Coimbatore, Tamil Nadu",
+    "coordinates": {
+      "lat": 11.0168,
+      "lng": 76.9558
+    },
+    "description": "ISRO headquarters region"
+  }
+}

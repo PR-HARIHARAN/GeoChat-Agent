@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Earth Engine Frontend</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { margin: 0; padding: 20px; font-family: Arial, sans-serif; }
+        #map { height: 500px; border: 1px solid #ccc; margin: 20px 0; }
+        .info { background: #f9f9f9; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #e6ffe6; border-left: 4px solid #00aa00; }
+        .error { background: #ffe6e6; border-left: 4px solid #ff0000; }
+        button { background: #007cba; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; margin: 5px; }
+        button:hover { background: #005a8a; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Frontend-Backend Connection Debug</h1>
+    
+    <div class="info">
+        <h3>Status</h3>
+        <div id="status">Starting tests...</div>
+    </div>
+    
+    <div>
+        <button onclick="testBackendConnection()">Test Backend</button>
+        <button onclick="testLiveLayers()">Test Live Layers</button>
+        <button onclick="loadEarthEngineLayer()">Load EE Layer</button>
+        <button onclick="testTileUrl()">Test Tile URL</button>
+    </div>
+    
+    <div id="map"></div>
+    
+    <div id="log" class="info">
+        <h3>Debug Log</h3>
+        <div id="logContent">Ready...</div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Initialize map
+        var map = L.map('map').setView([11.0168, 76.9558], 10);
+        
+        // Add satellite base layer
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles © Esri'
+        }).addTo(map);
+        
+        var currentLayer = null;
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logContent = document.getElementById('logContent');
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : '';
+            logContent.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            logContent.scrollTop = logContent.scrollHeight;
+            console.log(`[${timestamp}] ${message}`);
+        }
+        
+        function updateStatus(message, type = 'info') {
+            const status = document.getElementById('status');
+            status.innerHTML = message;
+            status.className = type === 'error' ? 'error' : type === 'success' ? 'success' : '';
+        }
+        
+        async function testBackendConnection() {
+            log('Testing backend connection...');
+            try {
+                const response = await fetch('http://localhost:8000/health');
+                const data = await response.json();
+                log(`✅ Backend connected: ${JSON.stringify(data)}`, 'success');
+                updateStatus('Backend: CONNECTED', 'success');
+            } catch (error) {
+                log(`❌ Backend connection failed: ${error.message}`, 'error');
+                updateStatus('Backend: FAILED', 'error');
+            }
+        }
+        
+        async function testLiveLayers() {
+            log('Testing live layers endpoint...');
+            try {
+                const response = await fetch('http://localhost:8000/api/earth-engine/live-layers');
+                const data = await response.json();
+                log(`✅ Live layers response: ${JSON.stringify(data, null, 2)}`, 'success');
+                
+                if (data.status === 'success') {
+                    updateStatus('Live Layers: SUCCESS', 'success');
+                    log(`Found layers: ${Object.keys(data.layers).join(', ')}`);
+                    
+                    // Check elevation layer
+                    const elevation = data.layers.elevation;
+                    if (elevation) {
+                        log(`Elevation tile URL: ${elevation.tile_url}`);
+                        log(`Elevation map ID: ${elevation.map_id}`);
+                    }
+                } else {
+                    log(`❌ Live layers failed: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Live layers request failed: ${error.message}`, 'error');
+                updateStatus('Live Layers: FAILED', 'error');
+            }
+        }
+        
+        async function loadEarthEngineLayer() {
+            log('Loading Earth Engine layer...');
+            try {
+                const response = await fetch('http://localhost:8000/api/earth-engine/live-layers');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    const elevationLayer = data.layers.elevation;
+                    if (elevationLayer && elevationLayer.tile_url) {
+                        
+                        if (currentLayer) {
+                            map.removeLayer(currentLayer);
+                        }
+                        
+                        log(`Adding layer with URL: ${elevationLayer.tile_url}`);
+                        
+                        currentLayer = L.tileLayer(elevationLayer.tile_url, {
+                            attribution: 'Google Earth Engine',
+                            opacity: 0.7,
+                            errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
+                        });
+                        
+                        currentLayer.on('tileerror', (e) => {
+                            log(`❌ Tile error: ${JSON.stringify(e)}`, 'error');
+                        });
+                        
+                        currentLayer.on('tileloadstart', () => {
+                            log('🔄 Started loading tiles...');
+                        });
+                        
+                        currentLayer.on('tileload', () => {
+                            log('✅ Tile loaded successfully!', 'success');
+                        });
+                        
+                        currentLayer.addTo(map);
+                        log('✅ Earth Engine layer added to map', 'success');
+                        updateStatus('Earth Engine Layer: LOADED', 'success');
+                    } else {
+                        log('❌ No elevation layer found', 'error');
+                    }
+                }
+            } catch (error) {
+                log(`❌ Load layer failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testTileUrl() {
+            log('Testing a specific tile URL...');
+            try {
+                const testUrl = 'http://localhost:8000/api/earth-engine/tiles/elevation/10/512/512';
+                log(`Testing: ${testUrl}`);
+                
+                const response = await fetch(testUrl);
+                log(`Tile response status: ${response.status}`);
+                
+                if (response.status === 200) {
+                    log('✅ Tile request successful!', 'success');
+                } else {
+                    log(`❌ Tile request failed with status ${response.status}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Tile test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        // Auto-run tests
+        setTimeout(() => {
+            testBackendConnection();
+            setTimeout(() => {
+                testLiveLayers();
+                setTimeout(() => {
+                    loadEarthEngineLayer();
+                }, 1000);
+            }, 1000);
+        }, 500);
+    </script>
+</body>
+</html>

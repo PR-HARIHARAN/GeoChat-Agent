@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Map Test Server</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 10px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .error {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .success {
+            background: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+    </style>
+</head>
+<body>
+    <h1>🌍 Simple Map Test Server</h1>
+    
+    <div class="container">
+        <h2>Server Status</h2>
+        <button onclick="testRoot()">Test Root Endpoint</button>
+        <button onclick="testHealth()">Test Health Check</button>
+        <div id="rootResult" class="result"></div>
+    </div>
+
+    <div class="container">
+        <h2>Earth Engine Map</h2>
+        <button onclick="testSimpleMap()">Get Simple Map Data</button>
+        <div id="mapResult" class="result"></div>
+    </div>
+
+    <div class="container">
+        <h2>Tile Test</h2>
+        <button onclick="testTile()">Test Tile Endpoint</button>
+        <div id="tileResult" class="result"></div>
+    </div>
+
+    <script>
+        const BASE_URL = 'http://localhost:8000';
+
+        async function makeRequest(endpoint, resultId) {
+            const resultDiv = document.getElementById(resultId);
+            resultDiv.textContent = 'Loading...';
+            resultDiv.className = 'result';
+
+            try {
+                const response = await fetch(`${BASE_URL}${endpoint}`);
+                const data = await response.json();
+                
+                resultDiv.textContent = JSON.stringify(data, null, 2);
+                resultDiv.className = 'result success';
+            } catch (error) {
+                resultDiv.textContent = `Error: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        function testRoot() {
+            makeRequest('/', 'rootResult');
+        }
+
+        function testHealth() {
+            makeRequest('/health', 'rootResult');
+        }
+
+        function testSimpleMap() {
+            makeRequest('/simple-map', 'mapResult');
+        }
+
+        function testTile() {
+            makeRequest('/test-tile/10/512/256', 'tileResult');
+        }
+
+        // Auto-test on page load
+        window.onload = function() {
+            testRoot();
+        };
+    </script>
+</body>
+</html> 
