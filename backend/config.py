@@ -41,7 +41,7 @@ class Config:
     LOG_FILE: Optional[Path] = Path(os.getenv('LOG_FILE', 'logs/application.log'))
     
     # Security
-    TOKEN_EXPIRE_MINUTES: int = int(os.getenv('TOKEN_EXPIRE_MINUTES', '1440'))
+    TOKEN_EXPIRE_MINUTES: int = 1440
     
     @property
     def is_production(self) -> bool:
