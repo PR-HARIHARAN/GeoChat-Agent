@@ -1,13 +1,16 @@
+
+
 # 🌍 Disaster Eye: Real-time Disaster Monitoring System
 
 [![Status](https://img.shields.io/badge/Status-Active-success)](https://github.com/your-username/disaster-eye-earth-engine/actions)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Frontend](https://img.shields.io/badge/Frontend-React_TypeScript-61DAFB)](https://reactjs.org/)
 [![Backend](https://img.shields.io/badge/Backend-Python_FastAPI-009688)](https://fastapi.tiangolo.com/)
 [![Earth Engine](https://img.shields.io/badge/Data-Google_Earth_Engine-4285F4)](https://earthengine.google.com/)
-[![AI](https://img.shields.io/badge/AI-OpenAI_GPT-412991)](https://openai.com/)
+
 
 Disaster Eye is an advanced geospatial analysis platform that leverages Google Earth Engine to provide real-time disaster monitoring, risk assessment, and vulnerability analysis. This comprehensive solution helps in identifying flood-prone areas, analyzing building footprints, and assessing disaster risks using satellite imagery and geospatial data.
+
+https://github.com/user-attachments/assets/64ea4cb6-6cd5-43ac-892e-e1148193d493
 
 ## ✨ Key Features
 
